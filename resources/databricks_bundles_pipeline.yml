@@ -1,0 +1,9 @@
+# The main pipeline for databricks_bundles
+resources:
+  pipelines:
+    databricks_bundles_pipeline:
+      name: databricks_bundles_pipeline
+      target: databricks_bundles_${bundle.environment}
+      libraries:
+        - notebook:
+            path: ../src/dlt_pipeline.ipynb
