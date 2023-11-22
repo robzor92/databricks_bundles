@@ -13,35 +13,41 @@ resources:
           - robin@jimlogicalclocks.onmicrosoft.com
 
       tasks:
-        - task_key: notebook_task
+        - task_key: notebook_task_1
           job_cluster_key: job_cluster
           notebook_task:
-            notebook_path: ../src/notebook.ipynb
-        
-        - task_key: refresh_pipeline
-          depends_on:
-            - task_key: notebook_task
-          pipeline_task:
-            pipeline_id: ${resources.pipelines.databricks_bundles_pipeline.id}
-        
-        - task_key: main_task
-          depends_on:
-            - task_key: refresh_pipeline
-          job_cluster_key: job_cluster
-          python_wheel_task:
-            package_name: databricks_bundles
-            entry_point: main
+            notebook_path: ../src/1_feature_pipeline.ipynb
           libraries:
-            # By default we just include the .whl file generated for the databricks_bundles package.
-            # See https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
-            # for more information on how to add other libraries.
-            - whl: ../dist/*.whl
+            - pypi:
+                package: hsfs~=3.5.0rc1
+            - jar: dbfs:///hopsworks/10.0.0.5/hsfs-spark-spark3.3-3.5.0-RC0.jar
+            - jar: dbfs:///hopsworks/10.0.0.5/hudi-spark3.3-bundle_2.12-0.12.3.1.jar
+            - jar: dbfs:///hopsworks/10.0.0.5/hopsfs-client-api-3.2.0.5-EE-SNAPSHOT.jar
+            - jar: dbfs:///hopsworks/10.0.0.5/hopsfs-client-3.2.0.5-EE-SNAPSHOT.jar
 
       job_clusters:
         - job_cluster_key: job_cluster
           new_cluster:
-            spark_version: 13.3.x-scala2.12
+            spark_version: 12.2.x-scala2.12
             node_type_id: Standard_D3_v2
             autoscale:
                 min_workers: 1
-                max_workers: 4
+                max_workers: 2
+            custom_tags:
+                hopsworks_project_id: "4215"
+                hopsworks_user: "robin000"
+            init_scripts:
+              - dbfs:
+                  destination: "dbfs:///hopsworks/10.0.0.5/myproject__robin000/initScript.sh"
+            spark_conf:
+              spark.hadoop.hops.ssl.trustore.name: "/dbfs/hopsworks/10.0.0.5/myproject__robin000/myproject__robin000__tstore.jks"
+              spark.hadoop.hops.rpc.socket.factory.class.default: "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory"
+              spark.serializer: "org.apache.spark.serializer.KryoSerializer"
+              spark.hadoop.hops.ssl.hostname.verifier: "ALLOW_ALL"
+              spark.hadoop.hops.ssl.keystore.name: "/dbfs/hopsworks/10.0.0.5/myproject__robin000/myproject__robin000__kstore.jks"
+              spark.hadoop.fs.hopsfs.impl: "io.hops.hopsfs.client.HopsFileSystem"
+              spark.hadoop.hops.ssl.keystores.passwd.name: "/dbfs/hopsworks/10.0.0.5/myproject__robin000/myproject__robin000__cert.key"
+              spark.hadoop.hops.ipc.server.ssl.enabled: "true"
+              spark.sql.hive.metastore.jars: "/hopsworks_metastore_jar/lib/*"
+              spark.hadoop.client.rpc.ssl.enabled.protocol: "TLSv1.2"
+              spark.hadoop.hive.metastore.uris: "thrift://10.0.0.5:9083"
