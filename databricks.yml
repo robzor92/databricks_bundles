@@ -6,6 +6,9 @@ bundle:
 include:
   - resources/*.yml
 
+experimental:
+  python_wheel_wrapper: true
+
 targets:
   # The 'dev' target, used for development purposes.
   # Whenever a developer deploys using 'dev', they get their own copy.
